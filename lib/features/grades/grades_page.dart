@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:drift/drift.dart';
 import '../../data/local/app_database.dart';
 import '../../app/theme/app_theme.dart';
 
@@ -100,48 +101,90 @@ class _GradesPageState extends State<GradesPage> {
   }
 
   void _message(String message){if(mounted)ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text(message)));}
-  @override
-  Widget build(BuildContext context)=>Padding(
-    padding:const EdgeInsets.all(26),
-    child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
-      const Text('Saisie des notes',style:TextStyle(fontSize:28,fontWeight:FontWeight.w800,color:AppTheme.ink)),
-      const SizedBox(height:6),
-      const Text('Notes sur 20, enregistrées localement par élève, matière et période.',style:TextStyle(color:AppTheme.muted)),
-      const SizedBox(height:20),
-      Wrap(spacing:12,runSpacing:12,children:[
-        SizedBox(width:260,child:DropdownButtonFormField<int>(
-          value:classId,decoration:const InputDecoration(labelText:'Classe'),
-          items:classes.map((e)=>DropdownMenuItem(value:e['id'] as int,child:Text(e['name'].toString()))).toList(),
-          onChanged:(v)=>setState(()=>classId=v))),
-        SizedBox(width:260,child:DropdownButtonFormField<int>(
-          value:periodId,decoration:const InputDecoration(labelText:'Période'),
-          items:periods.map((e)=>DropdownMenuItem(value:e['id'] as int,child:Text(e['label'].toString()))).toList(),
-          onChanged:(v)=>setState(()=>periodId=v))),
-        FilledButton.icon(onPressed:classId!=null&&periodId!=null?_loadGrid:null,icon:const Icon(Icons.search),label:const Text('Afficher')),
-        FilledButton.icon(onPressed:students.isNotEmpty&&!saving?_save:null,icon:const Icon(Icons.save_outlined),label:Text(saving?'Enregistrement…':'Enregistrer les notes')),
-      ]),
-      const SizedBox(height:18),
-      Expanded(child:Card(child:loading?const Center(child:CircularProgressIndicator()):
-        students.isEmpty?const Center(child:Text('Choisissez une classe et une période, puis cliquez sur Afficher.')):
-        subjects.isEmpty?const Center(child:Text('Aucune matière affectée à cette classe. Configurez ses matières avant la saisie.')):
-        Scrollbar(child:SingleChildScrollView(child:SingleChildScrollView(scrollDirection:Axis.horizontal,child:DataTable(
-          columns:[
-            const DataColumn(label:Text('Matricule')),
-            const DataColumn(label:Text('Élève')),
-            ...subjects.map((s)=>DataColumn(label:Column(mainAxisAlignment:MainAxisAlignment.center,crossAxisAlignment:CrossAxisAlignment.start,children:[
-              Text(s['name'].toString()),Text('Coef. ${s['coefficient']}',style:const TextStyle(fontSize:11,color:AppTheme.muted))
-            ]))),
+  Widget _gridContent() {
+    if (loading) return const Center(child: CircularProgressIndicator());
+    if (students.isEmpty) return const Center(child: Text('Choisissez une classe et une période, puis cliquez sur Afficher.'));
+    if (subjects.isEmpty) return const Center(child: Text('Aucune matière affectée à cette classe. Configurez ses matières avant la saisie.'));
+    return Scrollbar(
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: DataTable(
+          columns: [
+            const DataColumn(label: Text('Matricule')),
+            const DataColumn(label: Text('Élève')),
+            ...subjects.map((s) => DataColumn(
+              label: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(s['name'].toString()),
+                  Text('Coef. ${s['coefficient']}', style: const TextStyle(fontSize: 11, color: AppTheme.muted)),
+                ],
+              ),
+            )),
           ],
-          rows:students.map((st)=>DataRow(cells:[
+          rows: students.map((st) => DataRow(cells: [
             DataCell(Text(st['matricule'].toString())),
             DataCell(Text('${st['last_name']} ${st['first_name']}')),
-            ...subjects.map((su){
-              final ctl=controllers['${st['id']}_${su['subject_id']}']!;
-              return DataCell(SizedBox(width:76,child:TextField(controller:ctl,keyboardType:const TextInputType.numberWithOptions(decimal:true),decoration:const InputDecoration(hintText:'—',contentPadding:EdgeInsets.symmetric(horizontal:8,vertical:8)),)));
+            ...subjects.map((su) {
+              final ctl = controllers['${st['id']}_${su['subject_id']}']!;
+              return DataCell(SizedBox(
+                width: 76,
+                child: TextField(
+                  controller: ctl,
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  decoration: const InputDecoration(
+                    hintText: '—',
+                    contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                  ),
+                ),
+              ));
             }),
           ])).toList(),
-        ))))),
-      )),
-    ]),
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.all(20),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text('Saisie des notes', style: TextStyle(fontSize: 26, fontWeight: FontWeight.w800, color: AppTheme.ink)),
+        const SizedBox(height: 6),
+        const Text('Notes sur 20, enregistrées localement par élève, matière et période.', style: TextStyle(color: AppTheme.muted)),
+        const SizedBox(height: 20),
+        Wrap(
+          spacing: 12,
+          runSpacing: 12,
+          children: [
+            SizedBox(
+              width: 260,
+              child: DropdownButtonFormField<int>(
+                initialValue: classId,
+                decoration: const InputDecoration(labelText: 'Classe'),
+                items: classes.map((e) => DropdownMenuItem(value: e['id'] as int, child: Text(e['name'].toString()))).toList(),
+                onChanged: (v) => setState(() => classId = v),
+              ),
+            ),
+            SizedBox(
+              width: 260,
+              child: DropdownButtonFormField<int>(
+                initialValue: periodId,
+                decoration: const InputDecoration(labelText: 'Période'),
+                items: periods.map((e) => DropdownMenuItem(value: e['id'] as int, child: Text(e['label'].toString()))).toList(),
+                onChanged: (v) => setState(() => periodId = v),
+              ),
+            ),
+            FilledButton.icon(onPressed: classId != null && periodId != null ? _loadGrid : null, icon: const Icon(Icons.search), label: const Text('Afficher')),
+            FilledButton.icon(onPressed: students.isNotEmpty && !saving ? _save : null, icon: const Icon(Icons.save_outlined), label: Text(saving ? 'Enregistrement…' : 'Enregistrer les notes')),
+          ],
+        ),
+        const SizedBox(height: 18),
+        Expanded(child: Card(child: _gridContent())),
+      ],
+    ),
   );
 }
