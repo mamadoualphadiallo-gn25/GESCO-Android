@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:drift/drift.dart';
+import 'package:drift/drift.dart' hide Column;
 import '../../data/local/app_database.dart';
 import '../../app/theme/app_theme.dart';
 
