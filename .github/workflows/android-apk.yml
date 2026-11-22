@@ -59,6 +59,7 @@ jobs:
             sed -i -E \
               -e 's/compileSdkVersion[[:space:]]+34/compileSdkVersion 36/g' \
               -e 's/compileSdk[[:space:]]*=[[:space:]]*34/compileSdk = 36/g' \
+              -e 's/compileSdk[[:space:]]+34/compileSdk 36/g' \
               -e 's/compileSdkVersion flutter\.compileSdkVersion/compileSdkVersion 36/g' \
               -e 's/compileSdk = flutter\.compileSdkVersion/compileSdk = 36/g' \
               "$file"
