@@ -185,7 +185,7 @@ class _Definition {
   final Set<String> dateKeys;
 }
 
-const _definitions = <GescoSection, _Definition>{
+final _definitions = <GescoSection, _Definition>{
   GescoSection.years: _Definition(
     title: 'Années scolaires', subtitle: 'Créer et conserver les années scolaires.', table: 'school_years',
     query: 'SELECT id, label, starts_at, ends_at, is_current FROM school_years ORDER BY starts_at DESC',
