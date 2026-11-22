@@ -53,6 +53,39 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     } else {
       page = _ComingSoonPage(title: labels[selected]);
     }
+    if (MediaQuery.sizeOf(context).width < 720) {
+      return Scaffold(
+        appBar: AppBar(
+          title: Text(labels[selected], maxLines: 1, overflow: TextOverflow.ellipsis),
+        ),
+        drawer: Drawer(
+          child: SafeArea(
+            child: ListView(
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              children: [
+                const ListTile(
+                  leading: Icon(Icons.school_rounded, color: AppTheme.blue, size: 30),
+                  title: Text('GESCO', style: TextStyle(fontSize: 21, fontWeight: FontWeight.w800)),
+                  subtitle: Text('Gestion scolaire'),
+                ),
+                const Divider(),
+                for (var i = 0; i < labels.length; i++)
+                  ListTile(
+                    selected: selected == i,
+                    leading: Icon(icons[i]),
+                    title: Text(labels[i]),
+                    onTap: () {
+                      setState(() => selected = i);
+                      Navigator.pop(context);
+                    },
+                  ),
+              ],
+            ),
+          ),
+        ),
+        body: ColoredBox(color: AppTheme.canvas, child: page),
+      );
+    }
     return Scaffold(
       body: Row(children: [
         NavigationRail(
