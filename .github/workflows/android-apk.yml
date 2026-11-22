@@ -52,15 +52,19 @@ jobs:
       - name: Set Android compile SDK for Flutter plugins
         shell: bash
         run: |
-          find "$HOME/.pub-cache/hosted/pub.dev" -type f \( -name 'build.gradle' -o -name 'build.gradle.kts' \) -print0 |
+          echo "Locating file_picker Android Gradle files"
+          find "$HOME/.pub-cache" -type f -path '*/file_picker-*/android/build.gradle*' -print
+          find "$HOME/.pub-cache" -type f \( -name 'build.gradle' -o -name 'build.gradle.kts' \) -print0 |
           while IFS= read -r -d '' file; do
-            sed -i \
-              -e 's/compileSdk = flutter\.compileSdkVersion/compileSdk = 36/g' \
+            sed -i -E \
+              -e 's/compileSdkVersion[[:space:]]+34/compileSdkVersion 36/g' \
+              -e 's/compileSdk[[:space:]]*=[[:space:]]*34/compileSdk = 36/g' \
               -e 's/compileSdkVersion flutter\.compileSdkVersion/compileSdkVersion 36/g' \
+              -e 's/compileSdk = flutter\.compileSdkVersion/compileSdk = 36/g' \
               "$file"
           done
-          echo "Android plugin compile SDK values:"
-          grep -R -n -E 'compileSdk(Version)?[[:space:]]*=' "$HOME/.pub-cache/hosted/pub.dev" --include='build.gradle' --include='build.gradle.kts' | head -40 || true
+          echo "file_picker Gradle configuration after patch:"
+          grep -R -n -E 'compileSdk(Version)?' "$HOME/.pub-cache/hosted/pub.dev/file_picker-"*"/android" --include='build.gradle' --include='build.gradle.kts' || true
 
       - name: Generate Drift database
         run: dart run build_runner build --delete-conflicting-outputs
